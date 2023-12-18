@@ -54,7 +54,8 @@ void verifyDatalogExists() {
 void createDatalog(){
   Serial.println("Criando arquivo inicial");
   File datalog = getDatalog(FILE_WRITE);
-  datalog.println("numberOfWashes:0;isClean:0");
+  datalog.println("nWashes:0");
+  datalog.println("isClean:0");
   datalog.close();
   Serial.println("Arquivo datalog criado.");
 }
@@ -72,16 +73,28 @@ void readDatalog(){
 
 int getNumberOfWashes(){
   File datalog = getDatalog(O_READ);
-  String values = datalog.readString();
-  int numberOfWashes = values.charAt(15) - 48;
+  String values = datalog.readStringUntil('\n');
+  int nOfWashes = values.substring(8).toInt();
   datalog.close();
-  return numberOfWashes;
+
+  return nOfWashes;
 }
 
 int getIsClean(){
   File datalog = getDatalog(O_READ);
-  String values = datalog.readString();
-  int isClean = values.charAt(25) - 48;
+  int recNum = 0;
+  int isClean;
+  while (datalog.available())
+ {
+    String data = datalog.readStringUntil('\n');
+    recNum++; // Count the record
+
+    if(recNum == 2) {
+      isClean = data.substring(8).toInt();
+      break;
+    }
+ }
+  
   datalog.close();
   return isClean;
 }
@@ -103,16 +116,11 @@ void change(){
   int nWashes = getNumberOfWashes();
   int isClean = getIsClean();
 
-  if(isClean == 0){
-    isClean == 1;
-  } else {
-    isClean == 0;
-  }
-  datalog.print("numberOfWashes:");
-  datalog.print(++nWashes);
-  datalog.print(";isClean:");
+  datalog.print("nWashes:");
+  datalog.println(++nWashes);
+  datalog.print("isClean:");
   datalog.println(!isClean);
 
   datalog.close();
-  Serial.println("Estado alterado");
+  Serial.println("Estado alterado!");
 }
